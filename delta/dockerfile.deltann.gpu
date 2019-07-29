@@ -1,0 +1,18 @@
+FROM tensorflow/tensorflow:devel-gpu-py3
+COPY sources.list.ubuntu18.04  /etc/apt/sources.list 
+
+# install tools 
+RUN apt-get update && apt-get install -y         autoconf        automake         clang-format         curl         git         libtool         sudo         sox         tig         make         vim         unzip
+
+#add user
+ENV ROLE deltann
+RUN adduser --disabled-password --gecos '' --shell '/bin/bash' $ROLE   && adduser $ROLE sudo   && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+USER $ROLE 
+
+# install gcc
+# fix for tf1.14 docker
+# issue https://github.com/tensorflow/tensorflow/issues/29951
+RUN sudo apt-get install gcc-4.8 g++-4.8 -y &&   sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100 &&   sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100 &&   sudo update-alternatives --config gcc &&   sudo update-alternatives --config g++
+
+CMD ["/bin/bash", "-c"]
