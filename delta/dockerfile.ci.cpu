@@ -1,8 +1,9 @@
 FROM tensorflow/tensorflow:1.14.0-gpu-py3
-COPY sources.list.ubuntu18.04  /etc/apt/sources.list 
+COPY sources.list.ubuntu18.04 /etc/apt/sources.list
 
 # install tools 
-RUN apt-get update && apt-get install -y         autoconf        automake         clang-format         curl         git         libtool         sudo         sox         tig         make         vim         unzip
+COPY install.sh /install.sh
+RUN /bin/bash /install.sh
 
 #add user
 ENV ROLE ci
@@ -11,10 +12,11 @@ RUN adduser --disabled-password --gecos '' --shell '/bin/bash' $ROLE   && adduse
 USER $ROLE 
 
 # install gcc
-# fix for tf1.14 docker
-# issue https://github.com/tensorflow/tensorflow/issues/29951
-RUN sudo apt-get install gcc-4.8 g++-4.8 -y &&   sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 100 &&   sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100 &&   sudo update-alternatives --config gcc &&   sudo update-alternatives --config g++
+COPY install_user.sh /ci/install_user.sh
+RUN /bin/bash /ci/install_user.sh
 
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/ --upgrade pip && pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/ --user -r requirements.txt 
+COPY requirements.txt /ci/requirements.txt
+WORKDIR /ci
+RUN sudo pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/ --upgrade pip && sudo pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/ --user -r requirements.txt
 
 CMD ["/bin/bash", "-c"]
